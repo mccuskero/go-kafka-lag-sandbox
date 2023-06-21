@@ -1,0 +1,44 @@
+version: "2"
+services:
+  burrow:
+    image: solsson/burrow
+    networks:
+      sandbox_network:
+        ipv4_address: 10.6.0.5
+    volumes:
+      - ${PWD}/docker-config:/etc/burrow/
+      - ${PWD}/tmp:/var/tmp/burrow
+    ports:
+      - 8000:8000
+    depends_on:
+      - zookeeper
+      - kafka
+    restart: always
+
+  zookeeper:
+    image: wurstmeister/zookeeper
+    networks:
+      sandbox_network:
+    ports:
+      - 2181:2181
+
+  kafka:
+    image: wurstmeister/kafka
+    networks:
+      sandbox_network:
+    ports:
+      - 9092:9092
+    environment:
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181/local
+      KAFKA_ADVERTISED_HOST_NAME: kafka
+      KAFKA_ADVERTISED_PORT: 9092
+      KAFKA_CREATE_TOPICS: "test-topic:2:1,test-topic2:1:1,test-topic3:1:1"
+
+networks:
+  sandbox_network:
+    name: sandbox_network
+    driver: bridge
+    ipam:
+     config:
+       - subnet: 10.6.0.0/16
+         gateway: 10.6.0.1
